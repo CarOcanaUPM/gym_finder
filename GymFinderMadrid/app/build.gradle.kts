@@ -58,5 +58,8 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.places)
     implementation(libs.recyclerview)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    annotationProcessor(libs.room.compiler)
 
 }

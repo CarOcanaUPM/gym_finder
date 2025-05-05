@@ -27,9 +27,6 @@ public class Gimnasio {
         return placeId;
     }
 
-    public void setPlaceId(String placeId) {
-        this.placeId = placeId;
-    }
     public String getNombre() {
         return nombre;
     }
@@ -45,6 +42,23 @@ public class Gimnasio {
     public Geometry getGeometry() {
         return geometry;
     }
+
+    public void setPlaceId(String placeId) {
+        this.placeId = placeId;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
+    public void setPuntuacion(float puntuacion) {
+        this.puntuacion = puntuacion;
+    }
+
 
     public String getPhotoUrl(String apiKey) {
         if (photos != null && !photos.isEmpty()) {
@@ -88,6 +102,10 @@ public class Gimnasio {
 
         public String getPhotoReference() {
             return photo_reference;
+        }
+
+        public void setImagenPath(String imagenPath) {
+            this.photo_reference = imagenPath;
         }
     }
 }

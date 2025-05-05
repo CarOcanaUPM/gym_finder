@@ -1,10 +1,12 @@
 package com.example.gymfindermadrid;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -14,11 +16,13 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.room.*;
 
 import com.example.gymfindermadrid.databinding.ActivityMainBinding;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -29,10 +33,15 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private GimnasiosAdapter adapter;
     private ArrayList<Gimnasio> gimnasios = new ArrayList<>();
+    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "gimnasios-db").allowMainThreadQueries().build();
+
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -65,32 +74,78 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void obtenerGimnasios() {
-        String apiKey = getString(R.string.google_maps_key);
-        GimnasiosApiService service = RetrofitClient.getClient().create(GimnasiosApiService.class);
-        service.getGimnasios("40.416775,-3.703790", 5000, "gym", apiKey)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        respuesta -> {
-                            if (respuesta != null && respuesta.results != null) {
-                                gimnasios.clear();
-                                gimnasios.addAll(respuesta.results);
-                                adapter.notifyDataSetChanged();
+        if (hayConexionInternet()) {
+            // Hay Internet: pedir a la API
+            String apiKey = getString(R.string.google_maps_key);
+            GimnasiosApiService service = RetrofitClient.getClient().create(GimnasiosApiService.class);
+            service.getGimnasios("40.416775,-3.703790", 5000, "gym", apiKey)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            respuesta -> {
+                                if (respuesta != null && respuesta.results != null) {
+                                    gimnasios.clear();
+                                    gimnasios.addAll(respuesta.results);
+                                    adapter.notifyDataSetChanged();
 
-
-                                for (Gimnasio gimnasio : respuesta.results) {
-                                    Log.d("API_RESPONSE", "Nombre: " + gimnasio.getNombre());
-                                    Log.d("API_RESPONSE", "Dirección: " + gimnasio.getDireccion());
-                                    Log.d("API_RESPONSE", "Puntuación: " + gimnasio.getPuntuacion());
-                                    Log.d("API_RESPONSE", "Place ID: " + gimnasio.getPlaceId());
+                                    // Guardar en la base de datos si no existían
+                                    for (Gimnasio gimnasio : respuesta.results) {
+                                        guardarGimnasioSiNoExiste(gimnasio);
+                                    }
+                                } else {
+                                    Log.e("API", "No se recibieron datos de la API");
                                 }
-                            } else {
-                                Log.e("API", "No se recibieron datos de la API");
-                            }
-                        },
-                        error -> Log.e("API Error", "Error al obtener gimnasios: " + error.toString())
-                );
+                            },
+                            error -> Log.e("API Error", "Error al obtener gimnasios: " + error.toString())
+                    );
+        } else {
+            // No hay Internet: cargar desde base de datos
+            List<GimnasioEntity> gimnasiosLocales = db.gimnasioDao().obtenerTodos();
+
+            gimnasios.clear();
+            for (GimnasioEntity entidad : gimnasiosLocales) {
+                gimnasios.add(GimnasiofromEntity(entidad));
+            }
+            adapter.notifyDataSetChanged();
+        }
     }
+
+    private void guardarGimnasioSiNoExiste(Gimnasio gimnasio) {
+        new Thread(() -> {
+            Gimnasio existente = GimnasiofromEntity(db.gimnasioDao().obtenerGimnasioPorId(gimnasio.getPlaceId()));
+            if (existente == null) {
+                db.gimnasioDao().insertarGimnasio(EntityfromGimnasio(gimnasio));
+                Log.d("DB", "Gimnasio guardado: " + gimnasio.getNombre());
+            } else {
+                Log.d("DB", "Gimnasio ya existe en la BD: " + gimnasio.getNombre());
+            }
+        }).start();
+    }
+
+
+    //Posible solucion
+    public static Gimnasio GimnasiofromEntity(GimnasioEntity entity) {
+        if (entity == null) return null;
+        Gimnasio gimnasio = new Gimnasio();
+        gimnasio.setNombre(entity.getName());
+        gimnasio.setDireccion(entity.getAddress());
+        gimnasio.setPuntuacion(entity.getRating());
+        return gimnasio;
+    }
+
+    public static GimnasioEntity EntityfromGimnasio(Gimnasio gimnasio) {
+        if (gimnasio == null) return null;
+
+        GimnasioEntity entity = new GimnasioEntity();
+        entity.setName(gimnasio.getNombre());
+        entity.setAddress(gimnasio.getDireccion());
+        entity.setRating(gimnasio.getPuntuacion());
+
+        entity.setPlaceId(gimnasio.getPlaceId());
+
+        return entity;
+    }
+
     void obtenerDetallesGimnasio(String placeId) {
         String apiKey = getString(R.string.google_maps_key);
         GimnasiosApiService service = RetrofitClient.getClient().create(GimnasiosApiService.class);
@@ -106,6 +161,12 @@ public class MainActivity extends AppCompatActivity {
                         },
                         error -> Log.e("API Error", "Error al obtener detalles del gimnasio: " + error.toString())
                 );
+    }
+
+    private boolean hayConexionInternet() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnected();
     }
 
     @Override
