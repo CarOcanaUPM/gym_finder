@@ -2,8 +2,15 @@ package com.example.gymfindermadrid;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+import androidx.room.Ignore;
 
+@Entity(tableName = "gimnasios")
 public class Gimnasio {
+
+    @PrimaryKey(autoGenerate = true)
+    private int id;
 
     @SerializedName("name")
     private String nombre;
@@ -14,49 +21,35 @@ public class Gimnasio {
     @SerializedName("rating")
     private float puntuacion;
 
+    @Ignore
     @SerializedName("geometry")
     private Geometry geometry;
 
+    @Ignore
     @SerializedName("photos")
     private List<Photo> photos;
 
     @SerializedName("place_id")
     private String placeId;
 
-    public String getPlaceId() {
-        return placeId;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public String getNombre() {
-        return nombre;
-    }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
 
-    public String getDireccion() {
-        return direccion;
-    }
+    public String getDireccion() { return direccion; }
+    public void setDireccion(String direccion) { this.direccion = direccion; }
 
-    public float getPuntuacion() {
-        return puntuacion;
-    }
+    public float getPuntuacion() { return puntuacion; }
+    public void setPuntuacion(float puntuacion) { this.puntuacion = puntuacion; }
+
+    public String getPlaceId() { return placeId; }
+    public void setPlaceId(String placeId) { this.placeId = placeId; }
+
 
     public Geometry getGeometry() {
         return geometry;
-    }
-
-    public void setPlaceId(String placeId) {
-        this.placeId = placeId;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
-    }
-
-    public void setPuntuacion(float puntuacion) {
-        this.puntuacion = puntuacion;
     }
 
 

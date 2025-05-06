@@ -100,11 +100,11 @@ public class MainActivity extends AppCompatActivity {
                     );
         } else {
             // No hay Internet: cargar desde base de datos
-            List<GimnasioEntity> gimnasiosLocales = db.gimnasioDao().obtenerTodos();
+            List<Gimnasio> gimnasiosLocales = db.gimnasioDao().obtenerTodos();
 
             gimnasios.clear();
-            for (GimnasioEntity entidad : gimnasiosLocales) {
-                gimnasios.add(GimnasiofromEntity(entidad));
+            for (Gimnasio entidad : gimnasiosLocales) {
+                gimnasios.add(entidad);
             }
             adapter.notifyDataSetChanged();
         }
@@ -112,9 +112,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void guardarGimnasioSiNoExiste(Gimnasio gimnasio) {
         new Thread(() -> {
-            Gimnasio existente = GimnasiofromEntity(db.gimnasioDao().obtenerGimnasioPorId(gimnasio.getPlaceId()));
+            Gimnasio existente = db.gimnasioDao().obtenerGimnasioPorId(gimnasio.getPlaceId());
             if (existente == null) {
-                db.gimnasioDao().insertarGimnasio(EntityfromGimnasio(gimnasio));
+                db.gimnasioDao().insertarGimnasio(gimnasio);
                 Log.d("DB", "Gimnasio guardado: " + gimnasio.getNombre());
             } else {
                 Log.d("DB", "Gimnasio ya existe en la BD: " + gimnasio.getNombre());
@@ -122,29 +122,6 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-
-    //Posible solucion
-    public static Gimnasio GimnasiofromEntity(GimnasioEntity entity) {
-        if (entity == null) return null;
-        Gimnasio gimnasio = new Gimnasio();
-        gimnasio.setNombre(entity.getName());
-        gimnasio.setDireccion(entity.getAddress());
-        gimnasio.setPuntuacion(entity.getRating());
-        return gimnasio;
-    }
-
-    public static GimnasioEntity EntityfromGimnasio(Gimnasio gimnasio) {
-        if (gimnasio == null) return null;
-
-        GimnasioEntity entity = new GimnasioEntity();
-        entity.setName(gimnasio.getNombre());
-        entity.setAddress(gimnasio.getDireccion());
-        entity.setRating(gimnasio.getPuntuacion());
-
-        entity.setPlaceId(gimnasio.getPlaceId());
-
-        return entity;
-    }
 
     void obtenerDetallesGimnasio(String placeId) {
         String apiKey = getString(R.string.google_maps_key);

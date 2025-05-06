@@ -11,14 +11,14 @@ import java.util.List;
 public interface GimnasioDao {
 
     @Insert
-    void insertarGimnasio(GimnasioEntity gimnasio);
+    void insertarGimnasio(Gimnasio gimnasio);
 
     @Query("SELECT * FROM gimnasios")
-    List<GimnasioEntity> obtenerTodos();
+    List<Gimnasio> obtenerTodos();
 
     @Delete
-    void borrarGimnasio(GimnasioEntity gimnasio);
+    void borrarGimnasio(Gimnasio gimnasio);
 
     @Query("SELECT * FROM gimnasios WHERE placeId = :placeIdBuscar LIMIT 1")
-    GimnasioEntity obtenerGimnasioPorId(String placeIdBuscar);
+    Gimnasio obtenerGimnasioPorId(String placeIdBuscar);
 }
