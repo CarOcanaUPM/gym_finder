@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Botón que lleva al escáner real -->
+    <Button
+        android:id="@+id/btnEscanearNFC"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="¡ESCANEA!"
+        android:textSize="20sp"
+        android:backgroundTint="#FFD600" />
+
+    <!-- Lista de registros anteriores -->
+    <ListView
+        android:id="@+id/listaRegistros"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:dividerHeight="8dp"
+        android:layout_marginTop="24dp" />
+</LinearLayout>
