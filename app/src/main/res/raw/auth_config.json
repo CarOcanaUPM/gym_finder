@@ -1,0 +1,16 @@
+{
+  "client_id": "aa470656-2dea-458b-93b5-c83bec389f44",
+  "authorization_user_agent": "DEFAULT",
+  "redirect_uri": "msauth://com.example.gymfindermadrid/xIlrJ8kuhuklLmPCAI24HGaxOKE%3D",
+  "account_mode": "SINGLE",
+  "broker_redirect_uri_registered": false,
+  "authorities": [
+    {
+      "type": "B2C",
+      "audience": {
+        "type": "AzureADMultipleOrgs",
+        "tenant_id": "771c3321-f64a-4ab0-ba95-57171f1c5ee0"
+      }
+    }
+  ]
+}

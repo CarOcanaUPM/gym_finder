@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+
+
 android {
     namespace = "com.example.gymfindermadrid"
     compileSdk = 35
@@ -34,6 +36,7 @@ android {
     }
 }
 
+
 dependencies {
 
     implementation(libs.appcompat)
@@ -60,6 +63,10 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.msal)
     annotationProcessor(libs.room.compiler)
 
+}
+configurations.all {
+    exclude("com.microsoft.device.display","display-mask")
 }
