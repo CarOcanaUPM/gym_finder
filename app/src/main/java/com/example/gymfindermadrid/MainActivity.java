@@ -33,6 +33,22 @@ import java.util.List;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
@@ -141,6 +157,8 @@ public class MainActivity extends AppCompatActivity {
                                         guardarGimnasioSiNoExiste(gimnasio);
                                     }
 
+                                    exportarYEnviarBackup();
+
                                     Toast.makeText(this, "Gimnasios cargados: " + respuesta.results.size(), Toast.LENGTH_SHORT).show();
                                 }
                             },
@@ -170,6 +188,64 @@ public class MainActivity extends AppCompatActivity {
             });
         }).start();
     }
+
+    public void exportarYEnviarBackup() {
+        new Thread(() -> {
+            try {
+                // Paso 1: Copiar base de datos
+                File dbFile = getApplicationContext().getDatabasePath("gimnasios-db");
+                File backupFile = new File(getExternalFilesDir(null), "backup.db");
+
+                try (InputStream in = new FileInputStream(dbFile);
+                     OutputStream out = new FileOutputStream(backupFile)) {
+
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, length);
+                    }
+                }
+
+                // Paso 2: Enviar por HTTP usando OkHttp
+                OkHttpClient client = new OkHttpClient();
+
+                MediaType mediaType = MediaType.parse("application/octet-stream");
+                RequestBody fileBody = RequestBody.create(mediaType, backupFile);
+
+
+                MultipartBody requestBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("file", backupFile.getName(), fileBody)
+                        .build();
+
+                Request request = new Request.Builder()
+                        .url("http://10.0.2.2:5000/backups")
+                        .post(requestBody)
+                        .build();
+
+
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        Log.e("Backup", "Fallo de red: " + e.getMessage());
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        if (response.isSuccessful()) {
+                            Log.d("Backup", "Backup enviado correctamente");
+                        } else {
+                            Log.e("Backup", "Respuesta del servidor: " + response.code());
+                        }
+                    }
+                });
+
+            } catch (Exception e) {
+                Log.e("Backup", "Error durante backup: ", e);
+            }
+        }).start();
+    }
+
 
     private void guardarGimnasioSiNoExiste(Gimnasio gimnasio) {
         new Thread(() -> {

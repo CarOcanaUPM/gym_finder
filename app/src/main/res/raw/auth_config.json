@@ -6,9 +6,9 @@
   "broker_redirect_uri_registered": false,
   "authorities": [
     {
-      "type": "B2C",
+      "type": "AAD",
       "audience": {
-        "type": "AzureADMultipleOrgs",
+        "type": "AzureADMyOrg",
         "tenant_id": "771c3321-f64a-4ab0-ba95-57171f1c5ee0"
       }
     }
